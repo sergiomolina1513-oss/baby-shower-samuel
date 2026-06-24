@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Shower - Mesa de Regalos</title>
+    <style>
+        :root {
+            --azul-principal: #4a90e2; /* Azul para el botón */
+            --azul-claro: #d1e3f8;     /* Fondo suave */
+            --azul-hover: #357abd;     /* Azul oscuro al presionar */
+            --gris-bloqueo: #f0f0f0;
+            --texto-bloqueo: #a0a0a0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f9;
+            margin: 0;
+            padding: 10px;
+            color: #333;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 10px;
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        h1 { color: var(--azul-principal); font-size: 1.5rem; margin: 0; }
+        p { font-size: 0.9rem; color: #666; margin-top: 8px; }
+
+        /* Cuadrícula optimizada para Móvil (2 columnas) */
+        .grid-regalos {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2 columnas en móvil */
+            gap: 12px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* En pantallas grandes (PC), usar 4 columnas */
+        @media (min-width: 768px) {
+            .grid-regalos {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 20px;
+            }
+        }
+
+        .tarjeta {
+            background: white;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+            transition: 0.3s;
+        }
+
+        /* Imágenes más pequeñas y uniformes */
+        .tarjeta img {
+            width: 100%;
+            height: 110px; /* Altura reducida para móvil */
+            object-fit: cover;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .tarjeta h3 {
+            font-size: 0.79rem;
+            margin: 10px 0;
+            height: 34px; /* Asegura que el texto no mueva el botón */
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            text-align: center;
+        }
+
+        .btn-azul {
+            background-color: var(--azul-principal);
+            color: white;
+            border: none;
+            padding: 8px 5px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+            margin-top: auto;
+        }
+
+        .btn-azul:hover {
+            background-color: var(--azul-hover);
+        }
+
+        /* Estilo de Bloqueado (Gris) */
+        .tarjeta.bloqueado {
+            background-color: var(--gris-bloqueo);
+            border-color: #ddd;
+        }
+
+        .tarjeta.bloqueado img {
+            filter: grayscale(100%);
+            opacity: 0.5;
+        }
+
+        .tarjeta.bloqueado h3 {
+            color: var(--texto-bloqueo);
+        }
+
+        .nombre-apartado {
+            font-size: 0.75rem;
+            color: #d9534f;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            font-size: 1rem;
+            color: #666666;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>¡Mesa de Regalos de Samuel! 💙</h1>
+        <p>Selecciona el detalle que desees regalarnos, para que no se repitan. ¡Gracias por tu amor!</p>
+    </header>
+
+    <div class="grid-regalos" id="lista-regalos"></div>
+
+    <footer>
+        Hecho con cariño para nuestro pequeño Samu.
+    </footer>
+
+    <script>
+        // LISTA DE 42 PRODUCTOS ORIGINALES
+        const productos = [
+            { id: 1, nombre: "Teteros", img: "imagenes/teteros.jpg" },
+            { id: 2, nombre: "Cuna - colecho", img: "imagenes/colecho.jpg" },
+            { id: 3, nombre: "Bañera", img: "imagenes/bañera.jpg" },
+            { id: 4, nombre: "Kit de aseo + Cepillo para teteros", img: "imagenes/kitaseo.jpg" },
+            { id: 5, nombre: "Baberos + pañales etapa 1 (x50)", img: "imagenes/baberos.jpg" },
+            { id: 6, nombre: "Sillacomedor", img: "imagenes/sillacomedor.jpg" },
+            { id: 7, nombre: "Pañales etapa 0 (x100)", img: "imagenes/pañales0.jpg" },
+            { id: 8, nombre: "Pañalera maleta", img: "imagenes/pañalera.jpg" },
+            { id: 9, nombre: "Silla para carro", img: "imagenes/sillacarro.jpg" },
+            { id: 10, nombre: "Pañales etapa 1 (x100)", img: "imagenes/pañales1.jpg" },
+            { id: 11, nombre: "Silla mesedora", img: "imagenes/mesedora.jpg" },
+            { id: 12, nombre: "Mochila Cangurera", img: "imagenes/cargador.jpg" },
+            { id: 13, nombre: "Pañales etapa 2 (x100)", img: "imagenes/pañales2.jpg" },
+            { id: 14, nombre: "Cojín de lactancia", img: "imagenes/coginlactancia.jpg" },
+            { id: 15, nombre: "Gorritos y medias + Pañales etapa 1 (x50)", img: "imagenes/gorritos.jpg" },
+            { id: 16, nombre: "Set mamelucos 3-6 meses", img: "imagenes/mamelucos.jpg" },
+            { id: 17, nombre: "Toallas de baño + pañales etapa 1 (x50)", img: "imagenes/toallas.jpg" },
+            { id: 18, nombre: "Cobija térmica + pañales etapa 1(x50)", img: "imagenes/cobijatermica.jpg" },
+            { id: 19, nombre: "Conjuntos (3-6 meses) + Pañales etapa 2 (x30)", img: "imagenes/conjuntos.jpg" },
+            { id: 20, nombre: "Conjunto (3-6 meses) + Pañales etapa 2 (x50)", img: "imagenes/conjunto.jpg" },
+            { id: 21, nombre: "Sudadera + Pañales etapa 2 (x50)", img: "imagenes/sudadera.jpg" },
+            { id: 22, nombre: "Zapatos + Pañales etapa 2 (x50)", img: "imagenes/zapatos.jpg" },
+            { id: 23, nombre: "Pañales etapa 2 (x100)", img: "imagenes/pañales2 - copia.jpg" },
+            { id: 24, nombre: "Calentador - esterilizador de teteros", img: "imagenes/esterilizador.jpg" },
+            { id: 25, nombre: "Conjuntos de invierno + Pañales etapa 1 (x30)", img: "imagenes/conjuntosinvierno.jpg" },
+            { id: 26, nombre: "Shampoo y loción + pañitos", img: "imagenes/shampoo.jpg" },
+            { id: 27, nombre: "Cremas + pañitos humedos", img: "imagenes/cremas.jpg" },
+            { id: 28, nombre: "Kit de alimentación + pañales etapa 2(x50)", img: "imagenes/kiralimentacion.jpg" },
+            { id: 29, nombre: "Sleeping o cobertor + pañitos", img: "imagenes/sleeping.jpg" },
+            { id: 38, nombre: "Regalo sorpresa", img: "imagenes/sorpresa2.jpg" },
+            { id: 30, nombre: "Ropa recien nacido + pañitos", img: "imagenes/ropareciennacido.jpg" },
+            { id: 31, nombre: "Ropa de 6-9 meses + pañitos", img: "imagenes/ropabb6a9meses.jpg" },
+            { id: 32, nombre: "Pañales etapa 1 x100", img: "imagenes/pañales1 - copia.jpg" },
+            { id: 33, nombre: "Pijamas 3-6 meses + pañitos", img: "imagenes/pijamas3-6meses.jpg"},
+            { id: 34, nombre: "Olla infantil + termo", img: "imagenes/olla+termo.jpg" },
+            { id: 35, nombre: "Gimnasio para bb", img: "imagenes/gimnasioparabb.jpg" },
+            { id: 36, nombre: "Sábanas para cuna + pañales etapa 2 (x50)", img: "imagenes/sabanas+pañales.jpg" },
+            { id: 37, nombre: "Regalo sorpresa", img: "imagenes/sorpresa.jpg" },
+            { id: 39, nombre: "Caminador", img: "imagenes/caminador.jpg" },
+            { id: 40, nombre: "Semanario 6-9 meses + pañitos", img: "imagenes/semanario.jpg" },
+            { id: 41, nombre: "Semanario esqueletos + pañales etapa 2 x50", img: "imagenes/semanarioesqueletos.jpg" },
+            { id: 42, nombre: "Coche", img: "imagenes/coche.jpg" }
+        ];
+
+        // IDs que permiten doble selección
+        const idsDobleSeleccion = [16, 18, 19, 20, 25, 29, 30, 31, 33];
+
+        const contenedor = document.getElementById('lista-regalos');
+        
+        // Variable en memoria para guardar el estado temporal
+        let apartados = {};
+
+        // 1. CONFIGURACIÓN DE TU ENLACE DIRECTO DE FIREBASE
+        const FIREBASE_URL = "https://bby-shower-samuel-default-rtdb.firebaseio.com/.json"; 
+
+        // 2. FUNCIÓN PARA LEER LOS DATOS EN TIEMPO REAL DESDE LA NUBE
+        async function obtenerApartadosDesdeNube() {
+            try {
+                const respuesta = await fetch(FIREBASE_URL);
+                const datos = await respuesta.json();
+                
+                // Si la base de datos está vacía, inicializamos un objeto vacío
+                apartados = datos || {};
+                
+                // Dibujar los productos en la pantalla con los datos actualizados
+                cargarProductos();
+            } catch (error) {
+                console.error("Error al conectar con la base de datos:", error);
+            }
+        }
+
+        // 3. FUNCIÓN PARA DIBUJAR LOS ELEMENTOS EN PANTALLA
+        function cargarProductos() {
+            contenedor.innerHTML = '';
+            productos.forEach(p => {
+                const listaNombres = apartados[p.id] || [];
+                const esDoble = idsDobleSeleccion.includes(p.id);
+                
+                // Determinar si el producto debe bloquearse por completo
+                let seBloquea = false;
+                if (!esDoble && listaNombres.length >= 1) seBloquea = true;
+                if (esDoble && listaNombres.length >= 2) seBloquea = true;
+
+                const div = document.createElement('div');
+                div.className = `tarjeta ${seBloquea ? 'bloqueado' : ''}`;
+                
+                // Generar etiquetas de texto para los nombres que ya apartaron
+                let nombresHtml = '';
+                listaNombres.forEach(nombre => {
+                    nombresHtml += `<p class="nombre-apartado">✔ Apartado por: ${nombre}</p>`;
+                });
+
+                // Generar el botón si aún quedan cupos disponibles
+                let botonHtml = '';
+                if (!seBloquea) {
+                    let textoBoton = esDoble && listaNombres.length === 1 ? 'Seleccionar (2do cupo)' : 'Seleccionar';
+                    botonHtml = `<button class="btn-azul" onclick="apartar(${p.id}, '${p.nombre}')">${textoBoton}</button>`;
+                }
+
+                div.innerHTML = `
+                    <img src="${p.img}" onerror="this.src='https://placehold.co/200?text=Sin+Foto'">
+                    <h3>${p.nombre}</h3>
+                    ${nombresHtml}
+                    ${botonHtml}
+                `;
+                contenedor.appendChild(div);
+            });
+        }
+
+        // 4. FUNCIÓN PARA GUARDAR UN NUEVO APARTADO EN LA NUBE
+        async function apartar(id, nombre) {
+            const nombrePersona = prompt(`¿Quién desea regalar "${nombre}"?`);
+            if (nombrePersona && nombrePersona.trim() !== "") {
+                
+                try {
+                    // Volvemos a consultar la nube rápido para evitar pisar datos de otros
+                    const respuesta = await fetch(FIREBASE_URL);
+                    const datosActuales = await respuesta.json() || {};
+                    
+                    if (!datosActuales[id]) {
+                        datosActuales[id] = [];
+                    }
+                    
+                    const esDoble = idsDobleSeleccion.includes(id);
+                    const cuposUsados = datosActuales[id].length;
+
+                    // Verificar si mágicamente se llenó el cupo mientras escribía el nombre
+                    if ((!esDoble && cuposUsados >= 1) || (esDoble && cuposUsados >= 2)) {
+                        alert("Lo sentimos, este regalo se acaba de agotar hace unos segundos. Por favor elige otro.");
+                        obtenerApartadosDesdeNube();
+                        return;
+                    }
+
+                    // Añadir el nuevo nombre al array del producto
+                    datosActuales[id].push(nombrePersona.trim());
+
+                    // Guardar la lista actualizada en Firebase usando PUT
+                    await fetch(FIREBASE_URL, {
+                        method: 'PUT',
+                        body: JSON.stringify(datosActuales)
+                    });
+                    
+                    alert("¡Guardado correctamente en la nube! Muchas gracias.");
+                    obtenerApartadosDesdeNube();
+                } catch (error) {
+                    alert("Hubo un problema al guardar. Inténtalo de nuevo.");
+                }
+            }
+        }
+
+        // Cargar los datos inmediatamente al abrir la página consultando la nube
+        obtenerApartadosDesdeNube();
+
+        // Auto-actualizar la pantalla cada 10 segundos por si hay más invitados conectados a la vez
+        setInterval(obtenerApartadosDesdeNube, 10000);
+    </script>
+</body>
+</html>
