@@ -100,9 +100,9 @@
             background-color: var(--azul-hover);
         }
 
-        /* Contenedor de botones de tallas */
+        /* Contenedor oculto inicialmente para las tallas */
         .contenedor-tallas {
-            display: flex;
+            display: none; /* Se activa por JS */
             flex-direction: column;
             gap: 5px;
             width: 100%;
@@ -124,6 +124,16 @@
         .btn-talla:hover {
             background-color: var(--azul-principal);
             color: white;
+        }
+
+        .btn-volver {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 0.7rem;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-top: 2px;
         }
 
         /* Estilo de Bloqueado (Gris) */
@@ -218,7 +228,7 @@
             { id: 42, nombre: "Coche", img: "imagenes/coche.jpg" }
         ];
 
-        // Productos que llevan control exacto por tallas clicables
+        // Productos que llevan control exacto por tallas distribuidas
         const productosConTallas = {
             16: ["0-3 meses", "3-6 meses", "6-9 meses"],
             18: ["0-3 meses", "3-6 meses", "6-9 meses"],
@@ -255,7 +265,7 @@
                 
                 let seBloquea = false;
                 let nombresHtml = '';
-                let zonaAccionHtml = ''; // Espacio dinámico para el botón o botones de talla
+                let zonaAccionHtml = ''; 
 
                 if (tieneTallas) {
                     const tallasMaximas = productosConTallas[p.id];
@@ -266,23 +276,27 @@
                         seBloquea = true;
                     }
 
-                    // Renderizar los nombres de quienes ya apartaron por talla
                     for (const [talla, persona] of Object.entries(tallasApartadas)) {
                         nombresHtml += `<p class="nombre-apartado">✔ Talla ${talla}: ${persona}</p>`;
                     }
 
-                    // Si no está bloqueado por completo, generar botones directos para las tallas libres
                     if (!seBloquea) {
-                        zonaAccionHtml = `<div class="contenedor-tallas">`;
+                        // Creamos un botón "Seleccionar" que al darle click oculta el botón y muestra las tallas
+                        zonaAccionHtml = `
+                            <button class="btn-azul" id="btn-main-${p.id}" onclick="mostrarMenuTallas(${p.id})">Seleccionar</button>
+                            <div class="contenedor-tallas" id="menu-tallas-${p.id}">
+                        `;
                         tallasMaximas.forEach(talla => {
                             if (!tallasApartadas.hasOwnProperty(talla)) {
-                                zonaAccionHtml += `<button class="btn-talla" onclick="apartarConTalla(${p.id}, '${p.nombre}', '${talla}')">Elegir ${talla}</button>`;
+                                zonaAccionHtml += `<button class="btn-talla" onclick="apartarConTalla(${p.id}, '${p.nombre}', '${talla}')">${talla}</button>`;
                             }
                         });
-                        zonaAccionHtml += `</div>`;
+                        zonaAccionHtml += `
+                                <button class="btn-volver" onclick="ocultarMenuTallas(${p.id})">Volver</button>
+                            </div>
+                        `;
                     }
                 } else {
-                    // Producto normal de un solo cupo tradicional
                     const listaNombres = Array.isArray(datosRegalo) ? datosRegalo : [];
                     if (listaNombres.length >= 1) {
                         seBloquea = true;
@@ -309,7 +323,17 @@
             });
         }
 
-        // Proceso para apartar productos normales
+        // Funciones visuales para abrir/cerrar menús de tallas de forma limpia
+        function mostrarMenuTallas(id) {
+            document.getElementById(`btn-main-${id}`).style.display = 'none';
+            document.getElementById(`menu-tallas-${id}`).style.display = 'flex';
+        }
+
+        function ocultarMenuTallas(id) {
+            document.getElementById(`menu-tallas-${id}`).style.display = 'none';
+            document.getElementById(`btn-main-${id}`).style.display = 'block';
+        }
+
         async function apartarNormal(id, nombre) {
             const nombrePersona = prompt(`¿Quién desea regalar "${nombre}"?`);
             if (!nombrePersona || nombrePersona.trim() === "") return;
@@ -340,7 +364,6 @@
             }
         }
 
-        // Proceso directo al hacer clic en un botón de talla específica
         async function apartarConTalla(id, nombre, talla) {
             const nombrePersona = prompt(`¿Quién desea regalar "${nombre}" en talla (${talla})?`);
             if (!nombrePersona || nombrePersona.trim() === "") return;
@@ -353,14 +376,12 @@
                     datosActuales[id] = {};
                 }
 
-                // Verificar en tiempo real si alguien más ya tomó esa misma talla
                 if (datosActuales[id].hasOwnProperty(talla)) {
                     alert(`Lo sentimos, la talla ${talla} de este regalo se acaba de ocupar hace unos instantes.`);
                     obtenerApartadosDesdeNube();
                     return;
                 }
 
-                // Asignar el nombre a la propiedad de la talla elegida
                 datosActuales[id][talla] = nombrePersona.trim();
 
                 await fetch(FIREBASE_URL, {
