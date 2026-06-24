@@ -100,6 +100,32 @@
             background-color: var(--azul-hover);
         }
 
+        /* Contenedor de botones de tallas */
+        .contenedor-tallas {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        .btn-talla {
+            background-color: white;
+            color: var(--azul-principal);
+            border: 2px solid var(--azul-principal);
+            padding: 6px 4px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-talla:hover {
+            background-color: var(--azul-principal);
+            color: white;
+        }
+
         /* Estilo de Bloqueado (Gris) */
         .tarjeta.bloqueado {
             background-color: var(--gris-bloqueo);
@@ -181,7 +207,7 @@
             { id: 30, nombre: "Ropa recien nacido + pañitos", img: "imagenes/ropareciennacido.jpg" },
             { id: 31, nombre: "Ropa + pañitos", img: "imagenes/ropabb6a9meses.jpg" },
             { id: 32, nombre: "Pañales etapa 1 x100", img: "imagenes/pañales1 - copia.jpg" },
-            { id: 33, height: 34, nombre: "Pijamas + pañitos", img: "imagenes/pijamas3-6meses.jpg"},
+            { id: 33, nombre: "Pijamas + pañitos", img: "imagenes/pijamas3-6meses.jpg"},
             { id: 34, nombre: "Olla infantil + termo", img: "imagenes/olla+termo.jpg" },
             { id: 35, nombre: "Gimnasio para bb", img: "imagenes/gimnasioparabb.jpg" },
             { id: 36, nombre: "Sábanas para cuna + pañales etapa 2 (x50)", img: "imagenes/sabanas+pañales.jpg" },
@@ -192,7 +218,7 @@
             { id: 42, nombre: "Coche", img: "imagenes/coche.jpg" }
         ];
 
-        // Definimos los productos que ahora llevan control exacto por tallas
+        // Productos que llevan control exacto por tallas clicables
         const productosConTallas = {
             16: ["0-3 meses", "3-6 meses", "6-9 meses"],
             18: ["0-3 meses", "3-6 meses", "6-9 meses"],
@@ -206,29 +232,21 @@
         };
 
         const contenedor = document.getElementById('lista-regalos');
-        
-        // Variable en memoria para guardar el estado temporal
         let apartados = {};
 
-        // 1. CONFIGURACIÓN DE TU ENLACE DIRECTO DE FIREBASE
         const FIREBASE_URL = "https://bby-shower-samuel-default-rtdb.firebaseio.com/.json"; 
 
-        // 2. FUNCIÓN PARA LEER LOS DATOS EN TIEMPO REAL DESDE LA NUBE
         async function obtenerApartadosDesdeNube() {
             try {
                 const respuesta = await fetch(FIREBASE_URL);
                 const datos = await respuesta.json();
-                
                 apartados = datos || {};
-                
-                // Dibujar los productos en la pantalla con los datos actualizados
                 cargarProductos();
             } catch (error) {
                 console.error("Error al conectar con la base de datos:", error);
             }
         }
 
-        // 3. FUNCIÓN PARA DIBUJAR LOS ELEMENTOS EN PANTALLA
         function cargarProductos() {
             contenedor.innerHTML = '';
             productos.forEach(p => {
@@ -237,24 +255,34 @@
                 
                 let seBloquea = false;
                 let nombresHtml = '';
+                let zonaAccionHtml = ''; // Espacio dinámico para el botón o botones de talla
 
                 if (tieneTallas) {
-                    // Es un producto con tallas distribuidas
                     const tallasMaximas = productosConTallas[p.id];
-                    const tallasApartadas = datosRegalo || {}; // Estructura esperada: { "talla": "Nombre" }
+                    const tallasApartadas = datosRegalo || {}; 
                     
-                    // Contar cuántas tallas ya tienen dueño
                     const ocupadas = Object.keys(tallasApartadas).length;
                     if (ocupadas >= tallasMaximas.length) {
                         seBloquea = true;
                     }
 
-                    // Renderizar los nombres asociados a sus respectivas tallas
+                    // Renderizar los nombres de quienes ya apartaron por talla
                     for (const [talla, persona] of Object.entries(tallasApartadas)) {
                         nombresHtml += `<p class="nombre-apartado">✔ Talla ${talla}: ${persona}</p>`;
                     }
+
+                    // Si no está bloqueado por completo, generar botones directos para las tallas libres
+                    if (!seBloquea) {
+                        zonaAccionHtml = `<div class="contenedor-tallas">`;
+                        tallasMaximas.forEach(talla => {
+                            if (!tallasApartadas.hasOwnProperty(talla)) {
+                                zonaAccionHtml += `<button class="btn-talla" onclick="apartarConTalla(${p.id}, '${p.nombre}', '${talla}')">Elegir ${talla}</button>`;
+                            }
+                        });
+                        zonaAccionHtml += `</div>`;
+                    }
                 } else {
-                    // Producto estándar (un solo cupo tradicional)
+                    // Producto normal de un solo cupo tradicional
                     const listaNombres = Array.isArray(datosRegalo) ? datosRegalo : [];
                     if (listaNombres.length >= 1) {
                         seBloquea = true;
@@ -262,110 +290,92 @@
                     listaNombres.forEach(nombre => {
                         nombresHtml += `<p class="nombre-apartado">✔ Apartado por: ${nombre}</p>`;
                     });
+
+                    if (!seBloquea) {
+                        zonaAccionHtml = `<button class="btn-azul" onclick="apartarNormal(${p.id}, '${p.nombre}')">Seleccionar</button>`;
+                    }
                 }
 
                 const div = document.createElement('div');
                 div.className = `tarjeta ${seBloquea ? 'bloqueado' : ''}`;
 
-                // Generar el botón si aún quedan cupos o tallas libres
-                let botonHtml = '';
-                if (!seBloquea) {
-                    botonHtml = `<button class="btn-azul" onclick="apartar(${p.id}, '${p.nombre}')">Seleccionar</button>`;
-                }
-
                 div.innerHTML = `
                     <img src="${p.img}" onerror="this.src='https://placehold.co/200?text=Sin+Foto'">
                     <h3>${p.nombre}</h3>
                     ${nombresHtml}
-                    ${botonHtml}
+                    ${zonaAccionHtml}
                 `;
                 contenedor.appendChild(div);
             });
         }
 
-        // 4. FUNCIÓN PARA GUARDAR UN NUEVO APARTADO EN LA NUBE
-        async function apartar(id, nombre) {
-            const tieneTallas = productosConTallas.hasOwnProperty(id);
-            let tallaSeleccionada = null;
+        // Proceso para apartar productos normales
+        async function apartarNormal(id, nombre) {
+            const nombrePersona = prompt(`¿Quién desea regalar "${nombre}"?`);
+            if (!nombrePersona || nombrePersona.trim() === "") return;
 
             try {
-                // Consultar rápido el estado actual en la nube para asegurar disponibilidad
                 const respuesta = await fetch(FIREBASE_URL);
                 const datosActuales = await respuesta.json() || {};
 
-                if (tieneTallas) {
-                    const tallasDisponibles = productosConTallas[id];
-                    const tallasOcupadas = datosActuales[id] || {};
-
-                    // Filtrar cuáles tallas siguen libres
-                    const libres = tallasDisponibles.filter(t => !tallasOcupadas.hasOwnProperty(t));
-
-                    if (libres.length === 0) {
-                        alert("Lo sentimos, todas las tallas de este regalo se acaban de agotar.");
-                        obtenerApartadosDesdeNube();
-                        return;
-                    }
-
-                    // Solicitar al usuario que escriba la talla deseada de las disponibles
-                    const mensajeTallas = `Tallas disponibles:\n${libres.join('\n')}\n\nEscribe exactamente la talla que deseas elegir:`;
-                    const seleccion = prompt(mensajeTallas);
-
-                    if (!seleccion) return; // Canceló el prompt
-
-                    const seleccionLimpia = seleccion.trim();
-
-                    if (!libres.includes(seleccionLimpia)) {
-                        alert("Por favor, escribe una de las opciones disponibles exactamente como aparece en la lista.");
-                        return;
-                    }
-                    tallaSeleccionada = seleccionLimpia;
-                } else {
-                    // Verificación para productos normales sin tallas
-                    const listaNombres = Array.isArray(datosActuales[id]) ? datosActuales[id] : [];
-                    if (listaNombres.length >= 1) {
-                        alert("Lo sentimos, este regalo se acaba de agotar hace unos segundos.");
-                        obtenerApartadosDesdeNube();
-                        return;
-                    }
-                }
-
-                // Solicitar el nombre del invitado
-                const nombrePersona = prompt(`¿Quién desea regalar "${nombre}" ${tallaSeleccionada ? '('+tallaSeleccionada+')' : ''}?`);
-                if (nombrePersona && nombrePersona.trim() !== "") {
-                    
-                    if (tieneTallas) {
-                        if (!datosActuales[id] || Array.isArray(datosActuales[id])) {
-                            datosActuales[id] = {};
-                        }
-                        // Guardamos con la estructura clave-valor: { "talla": "Nombre" }
-                        datosActuales[id][tallaSeleccionada] = nombrePersona.trim();
-                    } else {
-                        if (!datosActuales[id]) {
-                            datosActuales[id] = [];
-                        }
-                        datosActuales[id].push(nombrePersona.trim());
-                    }
-
-                    // Guardar la base de datos actualizada vía PUT
-                    await fetch(FIREBASE_URL, {
-                        method: 'PUT',
-                        body: JSON.stringify(datosActuales)
-                    });
-                    
-                    alert("¡Guardado correctamente en la nube! Muchas gracias.");
+                const listaNombres = Array.isArray(datosActuales[id]) ? datosActuales[id] : [];
+                if (listaNombres.length >= 1) {
+                    alert("Lo sentimos, este regalo se acaba de agotar hace unos segundos.");
                     obtenerApartadosDesdeNube();
+                    return;
                 }
 
+                if (!datosActuales[id]) datosActuales[id] = [];
+                datosActuales[id].push(nombrePersona.trim());
+
+                await fetch(FIREBASE_URL, {
+                    method: 'PUT',
+                    body: JSON.stringify(datosActuales)
+                });
+                
+                alert("¡Guardado correctamente en la nube! Muchas gracias.");
+                obtenerApartadosDesdeNube();
             } catch (error) {
-                console.error(error);
                 alert("Hubo un problema al guardar. Inténtalo de nuevo.");
             }
         }
 
-        // Cargar los datos inmediatamente al abrir la página consultando la nube
-        obtenerApartadosDesdeNube();
+        // Proceso directo al hacer clic en un botón de talla específica
+        async function apartarConTalla(id, nombre, talla) {
+            const nombrePersona = prompt(`¿Quién desea regalar "${nombre}" en talla (${talla})?`);
+            if (!nombrePersona || nombrePersona.trim() === "") return;
 
-        // Auto-actualizar la pantalla cada 10 segundos por si hay más invitados conectados a la vez
+            try {
+                const respuesta = await fetch(FIREBASE_URL);
+                const datosActuales = await respuesta.json() || {};
+
+                if (!datosActuales[id] || Array.isArray(datosActuales[id])) {
+                    datosActuales[id] = {};
+                }
+
+                // Verificar en tiempo real si alguien más ya tomó esa misma talla
+                if (datosActuales[id].hasOwnProperty(talla)) {
+                    alert(`Lo sentimos, la talla ${talla} de este regalo se acaba de ocupar hace unos instantes.`);
+                    obtenerApartadosDesdeNube();
+                    return;
+                }
+
+                // Asignar el nombre a la propiedad de la talla elegida
+                datosActuales[id][talla] = nombrePersona.trim();
+
+                await fetch(FIREBASE_URL, {
+                    method: 'PUT',
+                    body: JSON.stringify(datosActuales)
+                });
+                
+                alert("¡Guardado correctamente en la nube! Muchas gracias.");
+                obtenerApartadosDesdeNube();
+            } catch (error) {
+                alert("Hubo un problema al guardar. Inténtalo de nuevo.");
+            }
+        }
+
+        obtenerApartadosDesdeNube();
         setInterval(obtenerApartadosDesdeNube, 10000);
     </script>
 </body>
