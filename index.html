@@ -336,7 +336,7 @@
         }
 
         async function apartarNormal(id, nombre) {
-            const nombrePersona = prompt(`¿Quién desea regalar "${nombre}"?`);
+            const nombrePersona = prompt(`¿Quién desea regalar "${nombre}"? (Nombre)`);
             if (!nombrePersona || nombrePersona.trim() === "") return;
 
             try {
@@ -366,7 +366,7 @@
         }
 
         async function apartarConTalla(id, nombre, talla) {
-            const nombrePersona = prompt(`¿Quién desea regalar "${nombre}" en talla (${talla})?`);
+            const nombrePersona = prompt(`¿Quién desea regalar "${nombre}" en talla (${talla})? (Nombre)`);
             if (!nombrePersona || nombrePersona.trim() === "") return;
 
             try {
