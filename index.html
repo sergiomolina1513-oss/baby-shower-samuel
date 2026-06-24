@@ -163,11 +163,11 @@
             { id: 13, nombre: "Pañales etapa 2 (x100)", img: "imagenes/pañales2.jpg" },
             { id: 14, nombre: "Cojín de lactancia", img: "imagenes/coginlactancia.jpg" },
             { id: 15, nombre: "Gorritos y medias + Pañales etapa 1 (x50)", img: "imagenes/gorritos.jpg" },
-            { id: 16, nombre: "Set mamelucos 3-6 meses", img: "imagenes/mamelucos.jpg" },
+            { id: 16, nombre: "Set mamelucos", img: "imagenes/mamelucos.jpg" },
             { id: 17, nombre: "Toallas de baño + pañales etapa 1 (x50)", img: "imagenes/toallas.jpg" },
             { id: 18, nombre: "Cobija térmica + pañales etapa 1(x50)", img: "imagenes/cobijatermica.jpg" },
-            { id: 19, nombre: "Conjuntos (3-6 meses) + Pañales etapa 2 (x30)", img: "imagenes/conjuntos.jpg" },
-            { id: 20, nombre: "Conjunto (3-6 meses) + Pañales etapa 2 (x50)", img: "imagenes/conjunto.jpg" },
+            { id: 19, nombre: "Conjuntos + Pañales etapa 2 (x30)", img: "imagenes/conjuntos.jpg" },
+            { id: 20, nombre: "Conjunto + Pañales etapa 2 (x50)", img: "imagenes/conjunto.jpg" },
             { id: 21, nombre: "Sudadera + Pañales etapa 2 (x50)", img: "imagenes/sudadera.jpg" },
             { id: 22, nombre: "Zapatos + Pañales etapa 2 (x50)", img: "imagenes/zapatos.jpg" },
             { id: 23, nombre: "Pañales etapa 2 (x100)", img: "imagenes/pañales2 - copia.jpg" },
@@ -179,21 +179,31 @@
             { id: 29, nombre: "Sleeping o cobertor + pañitos", img: "imagenes/sleeping.jpg" },
             { id: 38, nombre: "Regalo sorpresa", img: "imagenes/sorpresa2.jpg" },
             { id: 30, nombre: "Ropa recien nacido + pañitos", img: "imagenes/ropareciennacido.jpg" },
-            { id: 31, nombre: "Ropa de 6-9 meses + pañitos", img: "imagenes/ropabb6a9meses.jpg" },
+            { id: 31, nombre: "Ropa + pañitos", img: "imagenes/ropabb6a9meses.jpg" },
             { id: 32, nombre: "Pañales etapa 1 x100", img: "imagenes/pañales1 - copia.jpg" },
-            { id: 33, nombre: "Pijamas 3-6 meses + pañitos", img: "imagenes/pijamas3-6meses.jpg"},
+            { id: 33, height: 34, nombre: "Pijamas + pañitos", img: "imagenes/pijamas3-6meses.jpg"},
             { id: 34, nombre: "Olla infantil + termo", img: "imagenes/olla+termo.jpg" },
             { id: 35, nombre: "Gimnasio para bb", img: "imagenes/gimnasioparabb.jpg" },
             { id: 36, nombre: "Sábanas para cuna + pañales etapa 2 (x50)", img: "imagenes/sabanas+pañales.jpg" },
             { id: 37, nombre: "Regalo sorpresa", img: "imagenes/sorpresa.jpg" },
             { id: 39, nombre: "Caminador", img: "imagenes/caminador.jpg" },
-            { id: 40, nombre: "Semanario 6-9 meses + pañitos", img: "imagenes/semanario.jpg" },
+            { id: 40, nombre: "Semanario + pañitos", img: "imagenes/semanario.jpg" },
             { id: 41, nombre: "Semanario esqueletos + pañales etapa 2 x50", img: "imagenes/semanarioesqueletos.jpg" },
             { id: 42, nombre: "Coche", img: "imagenes/coche.jpg" }
         ];
 
-        // IDs que permiten doble selección
-        const idsDobleSeleccion = [16, 18, 19, 20, 25, 29, 30, 31, 33];
+        // Definimos los productos que ahora llevan control exacto por tallas
+        const productosConTallas = {
+            16: ["0-3 meses", "3-6 meses", "6-9 meses"],
+            18: ["0-3 meses", "3-6 meses", "6-9 meses"],
+            19: ["0-3 meses", "3-6 meses", "6-9 meses"],
+            20: ["0-3 meses", "3-6 meses", "6-9 meses"],
+            25: ["0-3 meses", "3-6 meses", "6-9 meses"],
+            29: ["0-3 meses", "3-6 meses", "6-9 meses"],
+            30: ["0-3 meses", "3-6 meses", "6-9 meses"],
+            31: ["0-3 meses", "3-6 meses", "6-9 meses"],
+            33: ["0-3 meses", "3-6 meses", "6-9 meses"]
+        };
 
         const contenedor = document.getElementById('lista-regalos');
         
@@ -209,7 +219,6 @@
                 const respuesta = await fetch(FIREBASE_URL);
                 const datos = await respuesta.json();
                 
-                // Si la base de datos está vacía, inicializamos un objeto vacío
                 apartados = datos || {};
                 
                 // Dibujar los productos en la pantalla con los datos actualizados
@@ -223,28 +232,45 @@
         function cargarProductos() {
             contenedor.innerHTML = '';
             productos.forEach(p => {
-                const listaNombres = apartados[p.id] || [];
-                const esDoble = idsDobleSeleccion.includes(p.id);
+                const datosRegalo = apartados[p.id];
+                const tieneTallas = productosConTallas.hasOwnProperty(p.id);
                 
-                // Determinar si el producto debe bloquearse por completo
                 let seBloquea = false;
-                if (!esDoble && listaNombres.length >= 1) seBloquea = true;
-                if (esDoble && listaNombres.length >= 2) seBloquea = true;
+                let nombresHtml = '';
+
+                if (tieneTallas) {
+                    // Es un producto con tallas distribuidas
+                    const tallasMaximas = productosConTallas[p.id];
+                    const tallasApartadas = datosRegalo || {}; // Estructura esperada: { "talla": "Nombre" }
+                    
+                    // Contar cuántas tallas ya tienen dueño
+                    const ocupadas = Object.keys(tallasApartadas).length;
+                    if (ocupadas >= tallasMaximas.length) {
+                        seBloquea = true;
+                    }
+
+                    // Renderizar los nombres asociados a sus respectivas tallas
+                    for (const [talla, persona] of Object.entries(tallasApartadas)) {
+                        nombresHtml += `<p class="nombre-apartado">✔ Talla ${talla}: ${persona}</p>`;
+                    }
+                } else {
+                    // Producto estándar (un solo cupo tradicional)
+                    const listaNombres = Array.isArray(datosRegalo) ? datosRegalo : [];
+                    if (listaNombres.length >= 1) {
+                        seBloquea = true;
+                    }
+                    listaNombres.forEach(nombre => {
+                        nombresHtml += `<p class="nombre-apartado">✔ Apartado por: ${nombre}</p>`;
+                    });
+                }
 
                 const div = document.createElement('div');
                 div.className = `tarjeta ${seBloquea ? 'bloqueado' : ''}`;
-                
-                // Generar etiquetas de texto para los nombres que ya apartaron
-                let nombresHtml = '';
-                listaNombres.forEach(nombre => {
-                    nombresHtml += `<p class="nombre-apartado">✔ Apartado por: ${nombre}</p>`;
-                });
 
-                // Generar el botón si aún quedan cupos disponibles
+                // Generar el botón si aún quedan cupos o tallas libres
                 let botonHtml = '';
                 if (!seBloquea) {
-                    let textoBoton = esDoble && listaNombres.length === 1 ? 'Seleccionar (2do cupo)' : 'Seleccionar';
-                    botonHtml = `<button class="btn-azul" onclick="apartar(${p.id}, '${p.nombre}')">${textoBoton}</button>`;
+                    botonHtml = `<button class="btn-azul" onclick="apartar(${p.id}, '${p.nombre}')">Seleccionar</button>`;
                 }
 
                 div.innerHTML = `
@@ -259,32 +285,68 @@
 
         // 4. FUNCIÓN PARA GUARDAR UN NUEVO APARTADO EN LA NUBE
         async function apartar(id, nombre) {
-            const nombrePersona = prompt(`¿Quién desea regalar "${nombre}"?`);
-            if (nombrePersona && nombrePersona.trim() !== "") {
-                
-                try {
-                    // Volvemos a consultar la nube rápido para evitar pisar datos de otros
-                    const respuesta = await fetch(FIREBASE_URL);
-                    const datosActuales = await respuesta.json() || {};
-                    
-                    if (!datosActuales[id]) {
-                        datosActuales[id] = [];
-                    }
-                    
-                    const esDoble = idsDobleSeleccion.includes(id);
-                    const cuposUsados = datosActuales[id].length;
+            const tieneTallas = productosConTallas.hasOwnProperty(id);
+            let tallaSeleccionada = null;
 
-                    // Verificar si mágicamente se llenó el cupo mientras escribía el nombre
-                    if ((!esDoble && cuposUsados >= 1) || (esDoble && cuposUsados >= 2)) {
-                        alert("Lo sentimos, este regalo se acaba de agotar hace unos segundos. Por favor elige otro.");
+            try {
+                // Consultar rápido el estado actual en la nube para asegurar disponibilidad
+                const respuesta = await fetch(FIREBASE_URL);
+                const datosActuales = await respuesta.json() || {};
+
+                if (tieneTallas) {
+                    const tallasDisponibles = productosConTallas[id];
+                    const tallasOcupadas = datosActuales[id] || {};
+
+                    // Filtrar cuáles tallas siguen libres
+                    const libres = tallasDisponibles.filter(t => !tallasOcupadas.hasOwnProperty(t));
+
+                    if (libres.length === 0) {
+                        alert("Lo sentimos, todas las tallas de este regalo se acaban de agotar.");
                         obtenerApartadosDesdeNube();
                         return;
                     }
 
-                    // Añadir el nuevo nombre al array del producto
-                    datosActuales[id].push(nombrePersona.trim());
+                    // Solicitar al usuario que escriba la talla deseada de las disponibles
+                    const mensajeTallas = `Tallas disponibles:\n${libres.join('\n')}\n\nEscribe exactamente la talla que deseas elegir:`;
+                    const seleccion = prompt(mensajeTallas);
 
-                    // Guardar la lista actualizada en Firebase usando PUT
+                    if (!seleccion) return; // Canceló el prompt
+
+                    const seleccionLimpia = seleccion.trim();
+
+                    if (!libres.includes(seleccionLimpia)) {
+                        alert("Por favor, escribe una de las opciones disponibles exactamente como aparece en la lista.");
+                        return;
+                    }
+                    tallaSeleccionada = seleccionLimpia;
+                } else {
+                    // Verificación para productos normales sin tallas
+                    const listaNombres = Array.isArray(datosActuales[id]) ? datosActuales[id] : [];
+                    if (listaNombres.length >= 1) {
+                        alert("Lo sentimos, este regalo se acaba de agotar hace unos segundos.");
+                        obtenerApartadosDesdeNube();
+                        return;
+                    }
+                }
+
+                // Solicitar el nombre del invitado
+                const nombrePersona = prompt(`¿Quién desea regalar "${nombre}" ${tallaSeleccionada ? '('+tallaSeleccionada+')' : ''}?`);
+                if (nombrePersona && nombrePersona.trim() !== "") {
+                    
+                    if (tieneTallas) {
+                        if (!datosActuales[id] || Array.isArray(datosActuales[id])) {
+                            datosActuales[id] = {};
+                        }
+                        // Guardamos con la estructura clave-valor: { "talla": "Nombre" }
+                        datosActuales[id][tallaSeleccionada] = nombrePersona.trim();
+                    } else {
+                        if (!datosActuales[id]) {
+                            datosActuales[id] = [];
+                        }
+                        datosActuales[id].push(nombrePersona.trim());
+                    }
+
+                    // Guardar la base de datos actualizada vía PUT
                     await fetch(FIREBASE_URL, {
                         method: 'PUT',
                         body: JSON.stringify(datosActuales)
@@ -292,9 +354,11 @@
                     
                     alert("¡Guardado correctamente en la nube! Muchas gracias.");
                     obtenerApartadosDesdeNube();
-                } catch (error) {
-                    alert("Hubo un problema al guardar. Inténtalo de nuevo.");
                 }
+
+            } catch (error) {
+                console.error(error);
+                alert("Hubo un problema al guardar. Inténtalo de nuevo.");
             }
         }
 
