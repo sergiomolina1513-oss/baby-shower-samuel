@@ -1,14 +1,3 @@
-Aquí tienes el código completo modificado.
-
-Para lograr lo que buscas, realicé los siguientes cambios en la lógica de JavaScript:
-
-Removí el ID 19 de la lista productosConTallas, ya que ahora se comportará como un producto normal pero con doble selección.
-
-Creé un objeto limitesEspeciales donde se define que los IDs 18 y 19 tienen un límite de 2 selecciones (mientras que los demás por defecto tienen 1).
-
-Modifiqué las funciones cargarProductos y apartarNormal para que lean este nuevo límite dinámico, permitiendo que el botón siga activo tras la primera selección y se bloquee únicamente al llegar a la segunda.
-
-HTML
 <!DOCTYPE html>
 <html lang="es">
 <head>
